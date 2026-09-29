@@ -1,6 +1,6 @@
-# CampusCare — Campus Complaint & Maintenance Portal
+# CITfix — Campus Complaint & Maintenance Portal
 
-A clean Next.js + Supabase implementation of the CampusCare project built during today's work.
+A clean Next.js + Supabase implementation of the CITfix project built during today's work.
 
 ## Included
 

@@ -1,4 +1,4 @@
--- CampusCare migration for the existing Supabase project.
+-- CITfix migration for the existing Supabase project.
 -- Run this in Supabase SQL Editor. It preserves existing users and complaints.
 
 alter table public.profiles add column if not exists account_status text not null default 'active';

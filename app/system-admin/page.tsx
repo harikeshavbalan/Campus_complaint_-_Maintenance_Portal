@@ -30,7 +30,7 @@ export default async function SystemAdminDashboard() {
         <div>
           <span className="eyebrow">SYSTEM ADMINISTRATOR</span>
           <h1>Administration</h1>
-          <p>Control administrative access for CampusCare.</p>
+          <p>Control administrative access for CITfix.</p>
         </div>
       </div>
 

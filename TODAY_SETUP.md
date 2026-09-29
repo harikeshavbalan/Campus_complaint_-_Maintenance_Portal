@@ -1,4 +1,4 @@
-# CampusCare — Today's setup checkpoint
+# CITfix — Today's setup checkpoint
 
 ## Test role mapping
 
