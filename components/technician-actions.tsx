@@ -1,0 +1,5 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+export function TechnicianTaskActions({taskId,complaintId,taskStatus}:{taskId:string;complaintId:string;taskStatus:string;complaintStatus:string}){const [busy,setBusy]=useState(false);const r=useRouter();async function act(next:'in_progress'|'completed'){setBusy(true);const s=createClient();await s.from('tasks').update({status:next,completed_date:next==='completed'?new Date().toISOString():null}).eq('id',taskId);await s.from('complaints').update({status:next==='completed'?'resolved':'in_progress'}).eq('id',complaintId);setBusy(false);r.refresh()}return <div className="actions">{taskStatus==='assigned'&&<button className="btn btn-primary btn-small" disabled={busy} onClick={()=>act('in_progress')}>Start work</button>}{taskStatus==='in_progress'&&<button className="btn btn-success btn-small" disabled={busy} onClick={()=>act('completed')}>Mark resolved</button>}{taskStatus==='completed'&&<span className="badge badge-green">Completed</span>}</div>}
