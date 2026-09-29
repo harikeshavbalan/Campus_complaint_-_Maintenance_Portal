@@ -7,6 +7,9 @@ alter table public.profiles add constraint profiles_account_status_check check (
 
 alter type public.complaint_status add value if not exists 'verified';
 
+alter table public.complaints
+add column if not exists created_at timestamptz not null default now();
+
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path=public as $$
 declare requested text;
