@@ -20,7 +20,7 @@ export type Complaint = {
   priority: "low" | "medium" | "high" | "critical";
   status: ComplaintStatus;
   location: string | null;
-  submitted_by: string;
+  complaint_by: string;
   created_at: string;
   updated_at: string;
 };

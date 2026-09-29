@@ -1,4 +1,126 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ComplaintActions, TechnicianApproval } from "@/components/admin-workflow";
-export default async function Admin(){const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)redirect('/login');const {data:me}=await s.from('profiles').select('*').eq('id',user.id).single();if(!me||me.role!=='admin'||me.account_status!=='active')redirect('/dashboard');const {data:complaints}=await s.from('complaints').select('*').order('created_at',{ascending:false});const {data:techs}=await s.from('profiles').select('id,full_name,email,account_status').eq('role','technician').order('full_name');const {data:tasks}=await s.from('tasks').select('complaint_id,technician_id');const taskMap=new Map((tasks||[]).map(t=>[t.complaint_id,t.technician_id]));return <main className="container"><div className="section-title"><div><span className="eyebrow">ADMIN</span><h1 style={{margin:'8px 0'}}>Complaint control</h1><span className="muted">Validate complaints, assign technicians and monitor work.</span></div></div><div className="grid grid-4"><div className="card"><span className="muted small">OPEN</span><div className="stat">{complaints?.filter(c=>c.status==='open').length||0}</div></div><div className="card"><span className="muted small">VERIFIED</span><div className="stat">{complaints?.filter(c=>c.status==='verified').length||0}</div></div><div className="card"><span className="muted small">IN PROGRESS</span><div className="stat">{complaints?.filter(c=>c.status==='in_progress'||c.status==='assigned').length||0}</div></div><div className="card"><span className="muted small">RESOLVED</span><div className="stat">{complaints?.filter(c=>c.status==='resolved'||c.status==='closed').length||0}</div></div></div><div className="card" style={{marginTop:18}}><div className="section-title"><h2>Complaints</h2><span className="muted">Validation and assignment</span></div><div className="table-wrap"><table className="table"><thead><tr><th>Complaint</th><th>Priority</th><th>Status</th><th>Technician</th><th>Action</th></tr></thead><tbody>{complaints?.map(c=><tr key={c.id}><td><strong>{c.title}</strong><div className="muted small">{c.category} • {c.location||'—'}</div></td><td>{c.priority}</td><td><span className="badge badge-blue">{c.status.replace('_',' ')}</span></td><td>{taskMap.get(c.id)?techs?.find(t=>t.id===taskMap.get(c.id))?.full_name||'Assigned':'—'}</td><td><ComplaintActions complaintId={c.id} status={c.status} technicians={techs?.filter(t=>t.account_status==='active')||[]} assignedId={taskMap.get(c.id)||null}/></td></tr>)}</tbody></table></div></div><div className="card" style={{marginTop:18}}><div className="section-title"><h2>Technician approvals</h2><span className="muted">Activate maintenance staff</span></div>{techs?.filter(t=>t.account_status==='pending').length?<div className="list">{techs.filter(t=>t.account_status==='pending').map(t=><TechnicianApproval key={t.id} id={t.id} name={t.full_name||'Technician'} email={t.email||''}/>)}</div>:<div className="empty">No pending technician requests.</div>}</div></main>}
+import { TechnicianApproval } from "@/components/admin-workflow";
+import { getComplaintStatusClass, getComplaintStatusLabel } from "@/lib/complaint-status";
+
+const notDoneStatuses = ["open", "verified", "reopened"];
+const ongoingStatuses = ["assigned", "in_progress"];
+const completedStatuses = ["resolved", "closed"];
+const priorityRank: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+
+export default async function Admin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role,account_status")
+    .eq("id", user.id)
+    .single();
+  if (!profile || profile.role !== "admin" || profile.account_status !== "active") {
+    redirect("/dashboard");
+  }
+
+  const [{ data: complaints }, { data: technicians }] = await Promise.all([
+    supabase.from("complaints").select("id,title,category,location,priority,status,created_at"),
+    supabase.from("profiles").select("id,full_name,email,account_status").eq("role", "technician").order("full_name"),
+  ]);
+  const sortedComplaints = [...(complaints || [])].sort((a, b) =>
+    (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0)
+    || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  const statuses = sortedComplaints.map((complaint) => complaint.status);
+  const newComplaints = sortedComplaints.filter((complaint) => notDoneStatuses.includes(complaint.status));
+  const finishedComplaints = sortedComplaints.filter((complaint) => completedStatuses.includes(complaint.status));
+  const pendingTechnicians = technicians?.filter((tech) => tech.account_status === "pending") || [];
+
+  return (
+    <main className="container">
+      <div className="section-title">
+        <div>
+          <span className="eyebrow">ADMIN</span>
+          <h1 style={{ margin: "8px 0" }}>Complaint control</h1>
+          <span className="muted">Monitor progress and review new campus issues.</span>
+        </div>
+        <div className="actions">
+          <Link href="/admin/complaints" className="btn btn-primary">Open waiting list</Link>
+          <Link href="/admin/history" className="btn btn-secondary">Complaint history</Link>
+        </div>
+      </div>
+
+      <div className="grid grid-3">
+        <div className="card">
+          <span className="muted small">NOT DONE</span>
+          <div className="stat">{statuses.filter((status) => notDoneStatuses.includes(status)).length}</div>
+        </div>
+        <div className="card">
+          <span className="muted small">ONGOING</span>
+          <div className="stat">{statuses.filter((status) => ongoingStatuses.includes(status)).length}</div>
+        </div>
+        <div className="card">
+          <span className="muted small">COMPLETED</span>
+          <div className="stat">{statuses.filter((status) => completedStatuses.includes(status)).length}</div>
+        </div>
+      </div>
+
+      {[
+        { title: "New complaints", complaints: newComplaints, href: "/admin/complaints", linkLabel: "Waiting list" },
+        { title: "Finished complaints", complaints: finishedComplaints, href: "/admin/history", linkLabel: "Full history" },
+      ].map((section) => (
+        <section className="card" style={{ marginTop: 18 }} key={section.title}>
+          <div className="section-title">
+            <h2>{section.title}</h2>
+            <Link href={section.href} className="btn btn-secondary btn-small">{section.linkLabel}</Link>
+          </div>
+          {!section.complaints.length ? (
+            <div className="empty">No complaints in this section.</div>
+          ) : (
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th>Complaint</th><th>Priority</th><th>Status</th></tr></thead>
+                <tbody>
+                  {section.complaints.slice(0, 5).map((complaint) => (
+                    <tr key={complaint.id}>
+                      <td>
+                        <Link href={`/complaints/${complaint.id}`}>
+                          <strong>{complaint.title}</strong>
+                        </Link>
+                        <div className="muted small">
+                          {complaint.category} · {complaint.location || "Location not specified"}
+                        </div>
+                      </td>
+                      <td>{complaint.priority}</td>
+                      <td>
+                        <span className={`badge ${getComplaintStatusClass(complaint.status)}`}>
+                          {getComplaintStatusLabel(complaint.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      ))}
+
+      <section className="card" style={{ marginTop: 18 }}>
+        <div className="section-title">
+          <h2>Technician approvals</h2>
+          <span className="muted">Activate maintenance staff</span>
+        </div>
+        {pendingTechnicians.length ? (
+          <div className="list">
+            {pendingTechnicians.map((tech) => (
+              <TechnicianApproval key={tech.id} id={tech.id} name={tech.full_name || "Technician"} email={tech.email || ""} />
+            ))}
+          </div>
+        ) : (
+          <div className="empty">No pending technician requests.</div>
+        )}
+      </section>
+    </main>
+  );
+}

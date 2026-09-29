@@ -1,16 +1,26 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+type CompletedComplaint = {
+  id: string;
+  title: string;
+  category: string;
+  location: string | null;
+  priority: string;
+  completed_at: string;
+};
+
+export default async function Home() {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_public_completed_complaints");
+  const completedComplaints = (data || []) as CompletedComplaint[];
+
   return (
     <main className="landing">
       <section className="landing-hero">
         <div className="landing-inner">
           <div className="brand-mark">Campus<span>Care</span></div>
-          <p className="landing-kicker">CAMPUS COMPLAINT &amp; MAINTENANCE</p>
-          <h1>Make campus better.</h1>
-          <p className="landing-subtitle">
-            Report an issue, follow its progress, and see completed work in one place.
-          </p>
+          <h1>Campus complaint portal</h1>
           <div className="hero-actions">
             <Link href="/login" className="btn btn-primary">Login</Link>
             <Link href="/signup" className="btn btn-secondary">Create account</Link>
@@ -18,22 +28,28 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="landing-space container">
-        <div className="empty-panel">
-          <span className="empty-number">01</span>
-          <div>
-            <h2>Finished complaints</h2>
-            <p>Completed complaints, photos and resolution details will appear here.</p>
-          </div>
+      <section className="container">
+        <div className="section-title">
+          <h2>Finished complaints</h2>
+          <span className="muted">Recently completed campus work</span>
         </div>
-
-        <div className="empty-panel">
-          <span className="empty-number">02</span>
-          <div>
-            <h2>Campus updates</h2>
-            <p>College events, announcements and other updates can be added here later.</p>
+        {completedComplaints.length === 0 ? (
+          <div className="empty">Completed complaints will appear here.</div>
+        ) : (
+          <div className="list">
+            {completedComplaints.map((complaint) => (
+              <article className="list-item" key={complaint.id}>
+                <div>
+                  <strong>{complaint.title}</strong>
+                  <div className="muted small">
+                    {complaint.category} · {complaint.location || "Location not specified"}
+                  </div>
+                </div>
+                <span className="badge badge-green">Completed</span>
+              </article>
+            ))}
           </div>
-        </div>
+        )}
       </section>
     </main>
   );

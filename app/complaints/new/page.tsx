@@ -4,12 +4,39 @@ import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
+const campusLocations = [
+  { name: "Main Building / Main Block", floors: ["Ground floor", "First floor", "Second floor"] },
+  { name: "IT Block", floors: ["Ground floor", "First floor", "Second floor", "Third floor", "Fourth floor"] },
+  { name: "Computing Block", floors: ["Ground floor", "First floor", "Second floor", "Third floor", "Fourth floor"] },
+  { name: "Library Block", floors: ["Ground floor", "First floor", "Second floor"] },
+  { name: "MBA Block", floors: [] },
+  { name: "MSc Block", floors: [] },
+  { name: "New MSc Block", floors: [] },
+  { name: "Old MSc Block", floors: [] },
+  { name: "Polytechnic Main Block", floors: [] },
+  { name: "Auditorium", floors: [] },
+  { name: "Canteen", floors: [] },
+  { name: "Guest House", floors: ["Ground floor", "First floor"] },
+  { name: "Hostel Office", floors: [] },
+  { name: "Vellangini Hostel", floors: [] },
+  { name: "Thirumalai Hostel", floors: [] },
+  { name: "Maruthamalai Hostel", floors: [] },
+  { name: "Palani Hostel", floors: [] },
+  { name: "CH-1 Hostel", floors: [] },
+  { name: "CH-2 Hostel", floors: [] },
+  { name: "CH-3 Hostel", floors: [] },
+  { name: "Power House", floors: [] },
+];
+
 export default function NewComplaint() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Electrical");
   const [priority, setPriority] = useState("medium");
+  const [position, setPosition] = useState("");
   const [location, setLocation] = useState("");
+  const [floor, setFloor] = useState("");
+  const selectedLocation = campusLocations.find((item) => item.name === location);
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -75,10 +102,8 @@ export default function NewComplaint() {
         description,
         category,
         priority,
-        location: location || null,
-
-        // IMPORTANT:
-        // Your actual database uses complainant_id
+        location: [position, location, floor].filter(Boolean).join(", ") || null,
+        complaint_by: user.id,
         complainant_id: user.id,
       })
       .select()
@@ -246,19 +271,67 @@ export default function NewComplaint() {
 
           {/* LOCATION */}
           <div className="field">
-            <label className="label">
-              Location
-            </label>
-
-            <input
-              className="input"
-              value={location}
-              onChange={(e) =>
-                setLocation(e.target.value)
-              }
-              placeholder="Block / floor / room"
-            />
+            <label className="label" htmlFor="complaint-position">Position relative to the issue</label>
+            <select
+              id="complaint-position"
+              className="select"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              required
+            >
+              <option value="">Select a position</option>
+              <option value="Inside">Inside the building or facility</option>
+              <option value="Outside">Outside the building or facility</option>
+              <option value="Near entrance">Near the entrance</option>
+              <option value="Near exit">Near the exit</option>
+              <option value="Corridor">In a corridor or passage</option>
+              <option value="Beside staircase">Beside a staircase</option>
+              <option value="Beside lift">Beside a lift</option>
+              <option value="Near washroom">Near a washroom</option>
+              <option value="Near parking">Near the parking area</option>
+              <option value="Outdoor area">In an outdoor area</option>
+            </select>
           </div>
+
+          <div className="field">
+            <label className="label" htmlFor="complaint-location">Block or place</label>
+
+            <select
+              id="complaint-location"
+              className="select"
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                setFloor("");
+              }}
+              required
+            >
+              <option value="">Select a location</option>
+              {campusLocations.map((item) => (
+                <option key={item.name} value={item.name}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedLocation && selectedLocation.floors.length > 0 && (
+            <div className="field">
+              <label className="label" htmlFor="complaint-floor">Floor</label>
+              <select
+                id="complaint-floor"
+                className="select"
+                value={floor}
+                onChange={(e) => setFloor(e.target.value)}
+                required
+              >
+                <option value="">Select a floor</option>
+                {selectedLocation.floors.map((itemFloor) => (
+                  <option key={itemFloor} value={itemFloor}>{itemFloor}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* DESCRIPTION */}
           <div className="field">

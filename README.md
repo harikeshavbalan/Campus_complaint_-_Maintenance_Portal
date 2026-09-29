@@ -8,15 +8,17 @@ A clean Next.js + Supabase implementation of the CampusCare project built during
 - Supabase authentication
 - Role-based login redirects
 - Pending approval for Admin and Technician registrations
-- System Administrator approval of Admin accounts
-- Admin approval of Technician accounts
+- System Administrator approval of Admin account requests
+- Admin approval of Technician account requests
 - Complaint creation with JPG/PNG/WEBP image upload (max 5 MB)
-- Complaint validation and technician assignment
-- Technician progress: assigned → in progress → resolved
+- Priority-ordered admin queues for new and finished complaints
+- Technician assignment, status updates and progress notes
+- Database-backed status history for every complaint
 - Admin closure of resolved complaints
 - Complainant feedback and reopening
 - Complaint detail page with signed attachment URLs
-- Minimal landing page with empty areas reserved for completed complaints and campus updates
+- Public landing page with login, account creation and completed-complaint summaries
+- Role-scoped Supabase tables for profiles, complaints, tasks, attachments, feedback and status history
 - Responsive CSS without Tailwind
 
 ## Start locally
@@ -26,7 +28,7 @@ A clean Next.js + Supabase implementation of the CampusCare project built during
 3. Run `npm install`.
 4. Copy `.env.example` to `.env.local`.
 5. Put your existing Supabase URL and publishable key into `.env.local`.
-6. Because this project uses your existing Supabase project, do **not** blindly run `schema.sql` on the existing database. Use `supabase/migration_existing_project.sql` if the database needs the workflow migration.
+6. Run `supabase/migration_existing_project.sql` in the Supabase SQL Editor. It adds the status-history table, public completed-summary function, timestamp triggers and role-based row-level security policies. Do **not** run `schema.sql` on an existing database; that file is for a new project.
 7. Run `npm run dev`.
 
 ## Test accounts
