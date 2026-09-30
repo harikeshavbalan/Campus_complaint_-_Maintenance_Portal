@@ -33,6 +33,7 @@ export default async function Admin() {
   );
   const statuses = sortedComplaints.map((complaint) => complaint.status);
   const newComplaints = sortedComplaints.filter((complaint) => notDoneStatuses.includes(complaint.status));
+  const ongoingComplaints = sortedComplaints.filter((complaint) => ongoingStatuses.includes(complaint.status));
   const finishedComplaints = sortedComplaints.filter((complaint) => completedStatuses.includes(complaint.status));
   const pendingTechnicians = technicians?.filter((tech) => tech.account_status === "pending") || [];
 
@@ -67,12 +68,15 @@ export default async function Admin() {
 
       {[
         { title: "New complaints", complaints: newComplaints, href: "/admin/complaints", linkLabel: "Waiting list" },
+        { title: "Ongoing complaints", complaints: ongoingComplaints },
         { title: "Finished complaints", complaints: finishedComplaints, href: "/admin/history", linkLabel: "Full history" },
       ].map((section) => (
         <section className="card" style={{ marginTop: 18 }} key={section.title}>
           <div className="section-title">
             <h2>{section.title}</h2>
-            <Link href={section.href} className="btn btn-secondary btn-small">{section.linkLabel}</Link>
+            {section.href && section.linkLabel && (
+              <Link href={section.href} className="btn btn-secondary btn-small">{section.linkLabel}</Link>
+            )}
           </div>
           {!section.complaints.length ? (
             <div className="empty">No complaints in this section.</div>
