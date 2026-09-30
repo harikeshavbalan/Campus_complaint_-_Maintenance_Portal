@@ -183,7 +183,7 @@ export default async function ComplaintDetail({ params }: { params: Promise<{ id
                   {entry.note && <p className="muted" style={{ margin: "6px 0 0" }}>{entry.note}</p>}
                 </div>
                 <time className="muted small" dateTime={entry.changed_at}>
-                  {new Date(entry.changed_at).toLocaleString()}
+                  {new Date(entry.changed_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
                 </time>
               </article>
             ))}
