@@ -78,7 +78,7 @@ export default async function AdminOngoingComplaints() {
                         {getComplaintStatusLabel(complaint.status)}
                       </span>
                     </td>
-                    <td>{complaint.created_at ? new Date(complaint.created_at).toLocaleDateString() : "—"}</td>
+                    <td>{complaint.created_at ? new Date(complaint.created_at).toLocaleDateString("en-GB", { timeZone: "Asia/Kolkata" }) : "—"}</td>
                   </tr>
                 ))}
               </tbody>

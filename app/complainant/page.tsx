@@ -68,7 +68,7 @@ export default async function Complainant() {
                 <div>
                   <strong>{complaint.title}</strong>
                   <div className="muted small">
-                    {complaint.category} · {complaint.created_at ? new Date(complaint.created_at).toLocaleDateString() : "Date unavailable"}
+                    {complaint.category} · {complaint.created_at ? new Date(complaint.created_at).toLocaleDateString("en-GB", { timeZone: "Asia/Kolkata" }) : "Date unavailable"}
                   </div>
                 </div>
                 <span className={`badge ${getComplaintStatusClass(complaint.status)}`}>

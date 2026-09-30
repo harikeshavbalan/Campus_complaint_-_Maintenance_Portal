@@ -117,7 +117,7 @@ export default async function ComplaintDetail({ params }: { params: Promise<{ id
             </div>
             <div>
               <span className="muted small">SUBMITTED</span>
-              <div>{complaint.created_at ? new Date(complaint.created_at).toLocaleDateString() : "Date unavailable"}</div>
+              <div>{complaint.created_at ? new Date(complaint.created_at).toLocaleDateString("en-GB", { timeZone: "Asia/Kolkata" }) : "Date unavailable"}</div>
             </div>
           </div>
           {images.length > 0 && (
@@ -183,7 +183,7 @@ export default async function ComplaintDetail({ params }: { params: Promise<{ id
                   {entry.note && <p className="muted" style={{ margin: "6px 0 0" }}>{entry.note}</p>}
                 </div>
                 <time className="muted small" dateTime={entry.changed_at}>
-                  {new Date(entry.changed_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+                  {new Date(entry.changed_at).toLocaleString("en-GB", { timeZone: "Asia/Kolkata" })}
                 </time>
               </article>
             ))}
