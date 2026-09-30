@@ -47,6 +47,7 @@ export default async function Admin() {
         </div>
         <div className="actions">
           <Link href="/admin/complaints" className="btn btn-primary">Open waiting list</Link>
+          <Link href="/admin/ongoing" className="btn btn-secondary">Ongoing complaints</Link>
           <Link href="/admin/history" className="btn btn-secondary">Complaint history</Link>
         </div>
       </div>
@@ -68,7 +69,7 @@ export default async function Admin() {
 
       {[
         { title: "New complaints", complaints: newComplaints, href: "/admin/complaints", linkLabel: "Waiting list" },
-        { title: "Ongoing complaints", complaints: ongoingComplaints },
+        { title: "Ongoing complaints", complaints: ongoingComplaints, href: "/admin/ongoing", linkLabel: "All ongoing" },
         { title: "Finished complaints", complaints: finishedComplaints, href: "/admin/history", linkLabel: "Full history" },
       ].map((section) => (
         <section className="card" style={{ marginTop: 18 }} key={section.title}>

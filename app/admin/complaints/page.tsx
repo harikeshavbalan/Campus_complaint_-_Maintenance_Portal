@@ -40,7 +40,11 @@ export default async function AdminComplaints() {
           <h1 style={{ margin: "8px 0" }}>Waiting list</h1>
           <span className="muted">Open a complaint to review its details and decide what happens next.</span>
         </div>
-        <Link href="/admin" className="btn btn-secondary">Back to dashboard</Link>
+        <div className="actions">
+          <Link href="/admin/ongoing" className="btn btn-secondary">Ongoing complaints</Link>
+          <Link href="/admin/history" className="btn btn-secondary">Complaint history</Link>
+          <Link href="/admin" className="btn btn-secondary">Dashboard</Link>
+        </div>
       </div>
 
       <div className="card">

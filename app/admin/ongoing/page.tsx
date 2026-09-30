@@ -6,7 +6,10 @@ import {
   getComplaintStatusLabel,
 } from "@/lib/complaint-status";
 
-export default async function AdminComplaintHistory() {
+const ongoingStatuses = ["assigned", "in_progress"];
+const priorityRank: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+
+export default async function AdminOngoingComplaints() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -23,26 +26,30 @@ export default async function AdminComplaintHistory() {
   const { data: complaints } = await supabase
     .from("complaints")
     .select("id,title,category,location,priority,status,created_at")
-    .order("created_at", { ascending: false });
+    .in("status", ongoingStatuses);
+  const sortedComplaints = [...(complaints || [])].sort((a, b) =>
+    (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0)
+    || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   return (
     <main className="container">
       <div className="section-title">
         <div>
           <span className="eyebrow">ADMIN</span>
-          <h1 style={{ margin: "8px 0" }}>Complaint history</h1>
-          <span className="muted">All complaints, newest first.</span>
+          <h1 style={{ margin: "8px 0" }}>Ongoing complaints</h1>
+          <span className="muted">Complaints assigned to a technician or currently in progress.</span>
         </div>
         <div className="actions">
-          <Link href="/admin/complaints" className="btn btn-primary">Waiting list</Link>
-          <Link href="/admin/ongoing" className="btn btn-secondary">Ongoing complaints</Link>
-          <Link href="/admin" className="btn btn-secondary">Dashboard</Link>
+          <Link href="/admin/complaints" className="btn btn-secondary">Waiting list</Link>
+          <Link href="/admin/history" className="btn btn-secondary">Complaint history</Link>
+          <Link href="/admin" className="btn btn-primary">Dashboard</Link>
         </div>
       </div>
 
       <section className="card">
-        {!complaints?.length ? (
-          <div className="empty">No complaints have been recorded.</div>
+        {!sortedComplaints.length ? (
+          <div className="empty">No complaints are currently ongoing.</div>
         ) : (
           <div className="table-wrap">
             <table className="table">
@@ -51,11 +58,11 @@ export default async function AdminComplaintHistory() {
                   <th>Complaint</th>
                   <th>Priority</th>
                   <th>Status</th>
-                  <th>Submitted</th>
+                  <th>Started</th>
                 </tr>
               </thead>
               <tbody>
-                {complaints.map((complaint) => (
+                {sortedComplaints.map((complaint) => (
                   <tr key={complaint.id}>
                     <td>
                       <Link href={`/complaints/${complaint.id}`} className="complaint-title-link">
